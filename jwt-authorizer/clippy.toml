@@ -1,0 +1,8 @@
+# Clippy configuration for jwt-authorizer workspace
+# Documentation: https://rust-lang.github.io/rust-clippy/configuration.html
+
+# Disallowed names (extend default list)
+# Default: ["foo", "baz", "quux"]
+# The ".." extends the default list instead of replacing it
+disallowed-names = [".."]
+

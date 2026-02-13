@@ -1,0 +1,143 @@
+# This configuration uses cargo-deny to lint dependency graphs
+# More documentation: https://embarkstudios.github.io/cargo-deny/
+
+# The graph table configures how the dependency graph is constructed
+[graph]
+# Check all targets by default
+targets = []
+# Use all features when building the dependency graph
+all-features = true
+
+# Output configuration
+[output]
+# Include feature information in diagnostic graphs
+feature-depth = 1
+
+# Advisory database configuration for security vulnerabilities
+[advisories]
+# Use version 2 configuration (removes deprecated fields)
+version = 2
+# The advisory database will be cloned/fetched to this path
+db-path = "~/.cargo/advisory-db"
+# URLs of advisory databases to use
+db-urls = ["https://github.com/rustsec/advisory-db"]
+# Ignore specific advisories (add as needed)
+ignore = [
+    # RUSTSEC-2023-0071: rsa crate timing sidechannel vulnerability
+    # This is a transitive dependency via jsonwebtoken for RSA signature verification.
+    # The vulnerability affects RSA operations, but:
+    # 1. No patch is available yet (work is underway)
+    # 2. This is only used for signature verification, not key generation
+    # 3. jsonwebtoken is actively maintained and will update when a fix is available
+    # 4. The risk is mitigated by the fact that attackers need to observe timing information over the network
+    { id = "RUSTSEC-2023-0071", reason = "Transitive dependency via jsonwebtoken, no patch available, only used for signature verification" },
+]
+
+# License checking configuration
+[licenses]
+# Use version 2 configuration (removes deprecated fields)
+version = 2
+# List of allowed licenses (SPDX identifiers)
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-3-Clause",
+    "ISC",
+    "CDLA-Permissive-2.0",
+    "Unicode-3.0",
+]
+# Confidence threshold for license detection (0.0 to 1.0)
+confidence-threshold = 0.95
+
+# Allow specific licenses for specific crates
+exceptions = [
+    # ring uses a complex license structure
+    { allow = ["OpenSSL", "ISC", "MIT"], crate = "ring" },
+]
+
+# Private workspace crates configuration
+[licenses.private]
+# Don't check licenses for unpublished workspace crates
+ignore = true
+# Private registries (if any)
+registries = [
+    "dataspine"
+]
+
+# Clarifications for crates with complex licensing
+[[licenses.clarify]]
+name = "ring"
+expression = "ISC AND MIT AND OpenSSL"
+license-files = [
+    { path = "LICENSE", hash = 0xbd0eed23 }
+]
+
+# Dependency banning configuration
+[bans]
+# Lint level for multiple versions of the same crate
+multiple-versions = "deny"
+# Lint level for wildcard dependencies
+wildcards = "deny"
+# How to highlight duplicate dependencies in graphs
+highlight = "all"
+# Default features handling
+workspace-default-features = "allow"
+external-default-features = "allow"
+
+# Explicitly allowed duplicate crates (use sparingly)
+allow = [
+    # Allow different versions of these crates if needed
+    # { crate = "crate-name@version", reason = "explanation" },
+]
+
+# Banned crates
+deny = [
+    # Ban known problematic crates
+    # { crate = "openssl@1.0.0", reason = "vulnerable version" },
+]
+
+# Skip duplicate checking for these crates
+skip = [
+    { crate = "windows-sys", reason = "Windows-specific crate with multiple versions from different transitive dependencies (ring, tokio, native-tls)" },
+    { crate = "windows-targets", reason = "Windows-specific crate, multiple versions from windows-sys dependencies" },
+    { crate = "windows_aarch64_msvc", reason = "Windows-specific crate, multiple versions from windows-sys dependencies" },
+    { crate = "windows_x86_64_msvc", reason = "Windows-specific crate, multiple versions from windows-sys dependencies" },
+]
+
+# Skip entire dependency trees
+skip-tree = [
+    # { crate = "crate-name@version", reason = "explanation" },
+    { crate = "socket2", reason = "Windows system crate with version compatibility requirements" },
+]
+
+# Source validation configuration
+[sources]
+# What to do with unknown registries
+unknown-registry = "warn"
+# What to do with unknown git sources
+unknown-git = "warn"
+# Allowed registries
+allow-registry = [
+    "https://github.com/rust-lang/crates.io-index",
+]
+# Allowed git sources
+allow-git = [
+    # Add allowed git repositories here
+    # "https://github.com/your-org/your-private-repo",
+]
+
+# GitHub/GitLab organization allowlists
+[sources.allow-org]
+github = [
+    # Add GitHub organizations you trust
+    # "your-github-org",
+]
+gitlab = [
+    # Add GitLab organizations you trust
+    # "your-gitlab-org",
+]
+bitbucket = [
+    # Add Bitbucket organizations you trust
+    # "your-bitbucket-org",
+] 
